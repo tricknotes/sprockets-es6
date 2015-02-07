@@ -24,9 +24,12 @@ module Sprockets
     end
 
     def call(input)
+      filename = File.basename(input[:name], '.*')
       data = input[:data]
-      result = input[:cache].fetch(@cache_key + [data]) do
-        ES6to5.transform(data, @options)
+      options = @options.reverse_merge(modules: 'amd', moduleIds: true, filename: filename)
+
+      result = input[:cache].fetch(@cache_key + [data, options]) do
+        ES6to5.transform(data, options)
       end
       result['code']
     end
