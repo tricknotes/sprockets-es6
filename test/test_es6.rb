@@ -6,6 +6,8 @@ class TestES6 < MiniTest::Test
   def setup
     @env = Sprockets::Environment.new
     @env.append_path File.expand_path("../fixtures", __FILE__)
+    @dir = File.join(Dir::tmpdir, 'sprockets/manifest')
+    @manifest = Sprockets::Manifest.new(@env, File.join(@dir, 'manifest.json'))
   end
 
   def test_transform_arrow_function
@@ -85,7 +87,14 @@ System.register("mod", ["foo"], function (_export) {
     JS
   end
 
+  def test_compile
+    digest_path = @env['with_js.js'].digest_path
+    @manifest.compile('with_js.js')
+
+    assert File.exist?("#{@dir}/#{digest_path}")
+  end
+
   def register(processor)
-    @env.register_transformer 'text/ecmascript-6', 'application/javascript', processor
+    @env.register_engine '.es6', processor, mime_type: 'application/javascript'
   end
 end
